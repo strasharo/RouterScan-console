@@ -43,6 +43,10 @@ func scanCommand() *cli.Command {
 				Name:  "module-phpmyadmin",
 				Value: false,
 			},
+			&cli.BoolFlag{
+				Name:  "st-enable-debug",
+				Value: false,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			if err := routerscan.Initialize(); err != nil {
@@ -82,6 +86,25 @@ func scanCommand() *cli.Command {
 				if info.Enabled {
 					log.Printf("module %s enabled", info.Name)
 				}
+			}
+			if c.IsSet("st-enable-debug") {
+				log.Printf("setting stEnableDebug = %t", c.Bool("st-enable-debug"))
+				if err := routerscan.SetParamBool(routerscan.StEnableDebug, c.Bool("st-enable-debug")); err != nil {
+					panic(err)
+				}
+			}
+
+			if err := routerscan.SetParamString(routerscan.StUserAgent, "Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1"); err != nil {
+				panic(err)
+			}
+			if err := routerscan.SetParamString(routerscan.StPairsBasic, "admin\tadmin"); err != nil {
+				panic(err)
+			}
+			if err := routerscan.SetParamString(routerscan.StPairsDigest, "admin\tadmin"); err != nil {
+				panic(err)
+			}
+			if err := routerscan.SetParamString(routerscan.StPairsForm, "admin\tadmin"); err != nil {
+				panic(err)
 			}
 
 			if err := routerscan.SetSetTableDataCallback(); err != nil {

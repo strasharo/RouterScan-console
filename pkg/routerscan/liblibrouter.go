@@ -2,6 +2,7 @@ package routerscan
 
 /*
 #cgo LDFLAGS: -L${SRCDIR} -llibrouter
+#include <stdlib.h>
 #include <liblibrouter.h>
 */
 import "C"
@@ -65,23 +66,6 @@ func SwitchModule(index int, enabled bool) error {
 	return nil
 }
 
-type ParamBool int
-
-const (
-	StEnableDebug ParamBool = 0
-)
-
-func SetParamBool(st ParamBool, value bool) error {
-	var cValue C.uint = 1
-	if value {
-		cValue = 0
-	}
-	if C.SetParamW(C.uint(st), unsafe.Pointer(&cValue)) == 0 {
-		return fmt.Errorf("cannot set bool param %d", st)
-	}
-	return nil
-}
-
 //export tableDataCallback
 func tableDataCallback(row C.uint, name *C.char, value *C.char) {
 	fmt.Println(uint(row), cCharToString(name), cCharToString(value))
@@ -101,6 +85,50 @@ func cCharToString(val *C.char) string {
 			}
 		}
 	}
+}
+
+func stringToCChar(val string) *C.char {
+	buf := make([]byte, 0)
+	runes := []byte(val)
+	for i := 0; i < len(runes); i++ {
+		buf = append(buf, byte(runes[i]), '\x00')
+	}
+	buf = append(buf, '\x00')
+	return C.CString(string(buf))
+}
+
+type StValueBool uint
+
+const (
+	StEnableDebug StValueBool = 1
+)
+
+func SetParamBool(option StValueBool, value bool) error {
+	cValue := C.malloc(4)
+	defer C.free(unsafe.Pointer(cValue))
+	if C.SetParamW(C.uint(option), unsafe.Pointer(cValue)) == 0 {
+		return fmt.Errorf("cannot set param %d", option)
+	}
+	return nil
+}
+
+type StValueString uint
+
+const (
+	StUserAgent StValueString= 4
+	StPairsBasic  StValueString = 8
+	StPairsDigest StValueString = 9
+	StPairsForm   StValueString = 16
+)
+
+func SetParamString(option StValueString, value string) error {
+	cValue := stringToCChar(value)
+	//cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	if C.SetParamW(C.uint(option), unsafe.Pointer(cValue)) == 0 {
+		return fmt.Errorf("cannot set param %d", option)
+	}
+	return nil
 }
 
 func SetSetTableDataCallback() error {
