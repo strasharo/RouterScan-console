@@ -71,6 +71,11 @@ func tableDataCallback(row C.uint, name *C.char, value *C.char) {
 	fmt.Println(uint(row), cCharToString(name), cCharToString(value))
 }
 
+//export writeLogCallback
+func writeLogCallback(str *C.char, verbosity C.byte) {
+	fmt.Println(cCharToString(str), byte(verbosity))
+}
+
 // cCharToString - converts delphi's strings to Go strings.
 // Delphi's strings use nullbyte to specify end of char, not end of whole string,
 // so we should manually find sequence \x00\x00 to determine end of string.
@@ -104,8 +109,11 @@ const (
 )
 
 func SetParamBool(option StValueBool, value bool) error {
-	cValue := C.malloc(4)
-	defer C.free(unsafe.Pointer(cValue))
+	var cValue uintptr = 0
+	if value {
+		cValue = 3
+	}
+
 	if C.SetParamW(C.uint(option), unsafe.Pointer(cValue)) == 0 {
 		return fmt.Errorf("cannot set param %d", option)
 	}
@@ -115,10 +123,17 @@ func SetParamBool(option StValueBool, value bool) error {
 type StValueString uint
 
 const (
-	StUserAgent StValueString= 4
+	StUserAgent   StValueString = 4
 	StPairsBasic  StValueString = 8
 	StPairsDigest StValueString = 9
 	StPairsForm   StValueString = 16
+)
+
+type StValuePointer uint
+
+const (
+	StWriteLogCallback     = 2
+	StSetTableDataCallback = 3
 )
 
 func SetParamString(option StValueString, value string) error {
@@ -132,8 +147,15 @@ func SetParamString(option StValueString, value string) error {
 }
 
 func SetSetTableDataCallback() error {
-	if C.SetParamW(C.uint(3), unsafe.Pointer(C.tableDataCallback)) == 0 {
+	if C.SetParamW(C.uint(StSetTableDataCallback), unsafe.Pointer(C.tableDataCallback)) == 0 {
 		return errors.New("cannot set TableDataCallback")
+	}
+	return nil
+}
+
+func SetWriteLogCallback() error {
+	if C.SetParamW(C.uint(StWriteLogCallback), unsafe.Pointer(C.writeLogCallback)) == 0 {
+		return errors.New("cannot set WriteLogCallback")
 	}
 	return nil
 }

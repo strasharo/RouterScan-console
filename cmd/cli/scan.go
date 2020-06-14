@@ -127,6 +127,9 @@ func scanCommand() *cli.Command {
 			if err := routerscan.SetSetTableDataCallback(); err != nil {
 				panic(err)
 			}
+			if err := routerscan.SetWriteLogCallback(); err != nil {
+				panic(err)
+			}
 			host := strings.Split(c.String("target"), ":")
 			port, _ := strconv.ParseUint(host[1], 10, 16)
 			router, err := routerscan.PrepareRouter(1, inet_aton(host[0]), uint16(port))

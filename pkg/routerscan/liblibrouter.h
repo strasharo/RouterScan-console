@@ -48,7 +48,7 @@ enum _st_enum {
 bool lib_loader(void *handle);
 
 extern void tableDataCallback(dword row, char *name, char *value);
-
+extern void writeLogCallback(char *str, byte verbosity);
 
 /* Functions' declaration */
 bool Initialize();
