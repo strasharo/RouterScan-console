@@ -1,4 +1,4 @@
-package routerscan
+package librouter
 
 type StValueBool uint
 type StValueInt uint

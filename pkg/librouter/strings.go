@@ -1,4 +1,4 @@
-package routerscan
+package librouter
 
 import "C"
 

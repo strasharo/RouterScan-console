@@ -1,4 +1,4 @@
-package routerscan
+package librouter
 
 /*
 #cgo LDFLAGS: -L${SRCDIR} -llibrouter
