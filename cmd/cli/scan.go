@@ -48,6 +48,10 @@ func scanCommand() *cli.Command {
 				Name:  "st-enable-debug",
 				Value: false,
 			},
+			&cli.IntFlag{
+				Name:  "st-debug-verbosity",
+				Value: 0,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			if err := routerscan.Initialize(); err != nil {
@@ -108,6 +112,12 @@ func scanCommand() *cli.Command {
 			if c.IsSet("st-enable-debug") {
 				log.Printf("setting stEnableDebug = %t", c.Bool("st-enable-debug"))
 				if err := routerscan.SetParamBool(routerscan.StEnableDebug, c.Bool("st-enable-debug")); err != nil {
+					panic(err)
+				}
+			}
+			if c.IsSet("st-debug-verbosity") {
+				log.Printf("setting stDebugVerbosity = %d", c.Int("st-debug-verbosity"))
+				if err := routerscan.SetParamInt(routerscan.StDebugVerbosity, c.Int("st-debug-verbosity")); err != nil {
 					panic(err)
 				}
 			}
