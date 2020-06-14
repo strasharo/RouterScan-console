@@ -110,12 +110,6 @@ func stringToCChar(val string) *C.char {
 	return C.CString(string(buf))
 }
 
-type StValueBool uint
-
-const (
-	StEnableDebug StValueBool = 1
-)
-
 func SetParamBool(option StValueBool, value bool) error {
 	var cValue uintptr = 0
 	if value {
@@ -127,22 +121,6 @@ func SetParamBool(option StValueBool, value bool) error {
 	}
 	return nil
 }
-
-type StValueString uint
-
-const (
-	StUserAgent   StValueString = 4
-	StPairsBasic  StValueString = 8
-	StPairsDigest StValueString = 9
-	StPairsForm   StValueString = 16
-)
-
-type StValuePointer uint
-
-const (
-	StWriteLogCallback     = 2
-	StSetTableDataCallback = 3
-)
 
 func SetParamString(option StValueString, value string) error {
 	cValue := stringToCChar(value)
