@@ -66,14 +66,22 @@ func SwitchModule(index int, enabled bool) error {
 	return nil
 }
 
+type TableDataCallbackT func(row uint, name string, value string)
+
+var tdCallback TableDataCallbackT
+
 //export tableDataCallback
 func tableDataCallback(row C.uint, name *C.char, value *C.char) {
-	fmt.Println(uint(row), cCharToString(name), cCharToString(value))
+	tdCallback(uint(row), cCharToString(name), cCharToString(value))
 }
+
+type WriteLogCallbackT func(str string, verbosity int)
+
+var wlCallback WriteLogCallbackT
 
 //export writeLogCallback
 func writeLogCallback(str *C.char, verbosity C.byte) {
-	fmt.Println(cCharToString(str), byte(verbosity))
+	wlCallback(cCharToString(str), int(verbosity))
 }
 
 // cCharToString - converts delphi's strings to Go strings.
@@ -146,14 +154,16 @@ func SetParamString(option StValueString, value string) error {
 	return nil
 }
 
-func SetSetTableDataCallback() error {
+func SetSetTableDataCallback(cb TableDataCallbackT) error {
+	tdCallback = cb
 	if C.SetParamW(C.uint(StSetTableDataCallback), unsafe.Pointer(C.tableDataCallback)) == 0 {
 		return errors.New("cannot set TableDataCallback")
 	}
 	return nil
 }
 
-func SetWriteLogCallback() error {
+func SetWriteLogCallback(cb WriteLogCallbackT) error {
+	wlCallback = cb
 	if C.SetParamW(C.uint(StWriteLogCallback), unsafe.Pointer(C.writeLogCallback)) == 0 {
 		return errors.New("cannot set WriteLogCallback")
 	}

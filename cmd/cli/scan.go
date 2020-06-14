@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -124,10 +125,14 @@ func scanCommand() *cli.Command {
 				panic(err)
 			}
 
-			if err := routerscan.SetSetTableDataCallback(); err != nil {
+			if err := routerscan.SetSetTableDataCallback(func(row uint, name string, value string) {
+				fmt.Printf("%d %s %s\n", row, name, value)
+			}); err != nil {
 				panic(err)
 			}
-			if err := routerscan.SetWriteLogCallback(); err != nil {
+			if err := routerscan.SetWriteLogCallback(func(str string, verbosity int) {
+				fmt.Printf("%s %d\n", str, verbosity)
+			}); err != nil {
 				panic(err)
 			}
 			host := strings.Split(c.String("target"), ":")
