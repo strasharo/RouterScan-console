@@ -61,30 +61,47 @@ func scanCommand() *cli.Command {
 				if err != nil {
 					return err
 				}
-				if strings.Contains(info.Name, "RouterScanRouter") {
-					routerscan.SwitchModule(i, c.Bool("module-scanrouter"))
+				if strings.Contains(info.Name, "RouterScanRouter") && info.Enabled != c.Bool("module-scanrouter") {
+					if err := routerscan.SwitchModule(i, c.Bool("module-scanrouter")); err != nil {
+						log.Fatalf("cannot switch module RouterScanRouter to %t", c.Bool("module-scanrouter"))
+					} else {
+						log.Printf("module RouterScanRouter enabled = %t", c.Bool("module-scanrouter"))
+					}
 				}
-				if strings.Contains(info.Name, "ProxyCheckDetect") {
-					routerscan.SwitchModule(i, c.Bool("module-proxycheck"))
+				if strings.Contains(info.Name, "ProxyCheckDetect") && info.Enabled != c.Bool("module-proxycheck") {
+					if err := routerscan.SwitchModule(i, c.Bool("module-proxycheck")); err != nil {
+						log.Fatalf("cannot switch module ProxyCheckDetect to %t", c.Bool("module-proxycheck"))
+					} else {
+						log.Printf("module ProxyCheckDetect enabled = %t", c.Bool("module-proxycheck"))
+					}
 				}
-				if strings.Contains(info.Name, "HNAPUse") {
-					routerscan.SwitchModule(i, c.Bool("module-hnap"))
+				if strings.Contains(info.Name, "HNAPUse") && info.Enabled != c.Bool("module-hnap") {
+					if err := routerscan.SwitchModule(i, c.Bool("module-hnap")); err != nil {
+						log.Fatalf("cannot switch module HNAPUse to %t", c.Bool("module-hnap"))
+					} else {
+						log.Printf("module HNAPUse enabled = %t", c.Bool("module-hnap"))
+					}
 				}
-				if strings.Contains(info.Name, "SQLiteSQLite") {
-					routerscan.SwitchModule(i, c.Bool("module-sqlite"))
+				if strings.Contains(info.Name, "SQLiteSQLite") && info.Enabled != c.Bool("module-sqlite") {
+					if err := routerscan.SwitchModule(i, c.Bool("module-sqlite")); err != nil {
+						log.Fatalf("cannot switch module SQLiteSQLite to %t", c.Bool("module-sqlite"))
+					} else {
+						log.Printf("module SQLiteSQLite enabled = %t", c.Bool("module-sqlite"))
+					}
 				}
-				if strings.Contains(info.Name, "HudsonHudson") {
-					routerscan.SwitchModule(i, c.Bool("module-hudson"))
+				if strings.Contains(info.Name, "HudsonHudson") && info.Enabled != c.Bool("module-hudson") {
+					if err := routerscan.SwitchModule(i, c.Bool("module-hudson")); err != nil {
+						log.Fatalf("cannot switch module HudsonHudson to %t", c.Bool("module-hudson"))
+					} else {
+						log.Printf("module HudsonHudson enabled = %t", c.Bool("module-hudson"))
+					}
 				}
-				if strings.Contains(info.Name, "PMAphpMyAdmin") {
-					routerscan.SwitchModule(i, c.Bool("module-phpmyadmin"))
-				}
-				info, err = routerscan.GetModuleInfo(i)
-				if err != nil {
-					return err
-				}
-				if info.Enabled {
-					log.Printf("module %s enabled", info.Name)
+				if strings.Contains(info.Name, "PMAphpMyAdmin") && info.Enabled != c.Bool("module-phpmyadmin") {
+					if err := routerscan.SwitchModule(i, c.Bool("module-phpmyadmin")); err != nil {
+						log.Fatalf("cannot switch module PMAphpMyAdmin to %t", c.Bool("module-phpmyadmin"))
+					} else {
+						log.Printf("module PMAphpMyAdmin enabled = %t", c.Bool("module-phpmyadmin"))
+					}
 				}
 			}
 			if c.IsSet("st-enable-debug") {
