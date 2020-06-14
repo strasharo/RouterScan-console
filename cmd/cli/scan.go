@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -19,6 +20,18 @@ func scanCommand() *cli.Command {
 				Name:  "target",
 				Usage: "<ip>:<port>",
 				Value: "192.168.1.1:80",
+			},
+			&cli.PathFlag{
+				Name:  "auth-basic",
+				Value: "auth_basic.txt",
+			},
+			&cli.PathFlag{
+				Name:  "auth-digest",
+				Value: "auth_digest.txt",
+			},
+			&cli.PathFlag{
+				Name:  "auth-form",
+				Value: "auth_form.txt",
 			},
 			&cli.BoolFlag{
 				Name:  "module-scanrouter",
@@ -125,13 +138,25 @@ func scanCommand() *cli.Command {
 			if err := librouter.SetParamString(librouter.StUserAgent, "Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1"); err != nil {
 				panic(err)
 			}
-			if err := librouter.SetParamString(librouter.StPairsBasic, "admin\tadmin"); err != nil {
+			authBasic, err := ioutil.ReadFile(c.Path("auth-basic"))
+			if err != nil {
 				panic(err)
 			}
-			if err := librouter.SetParamString(librouter.StPairsDigest, "admin\tadmin"); err != nil {
+			if err := librouter.SetParamString(librouter.StPairsBasic, string(authBasic)); err != nil {
 				panic(err)
 			}
-			if err := librouter.SetParamString(librouter.StPairsForm, "admin\tadmin"); err != nil {
+			authDigest, err := ioutil.ReadFile(c.Path("auth-digest"))
+			if err != nil {
+				panic(err)
+			}
+			if err := librouter.SetParamString(librouter.StPairsDigest, string(authDigest)); err != nil {
+				panic(err)
+			}
+			authForm, err := ioutil.ReadFile(c.Path("auth-form"))
+			if err != nil {
+				panic(err)
+			}
+			if err := librouter.SetParamString(librouter.StPairsForm, string(authForm)); err != nil {
 				panic(err)
 			}
 
