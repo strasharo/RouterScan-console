@@ -125,7 +125,7 @@ type Router struct {
 	p unsafe.Pointer
 }
 
-func PrepareRouter(row int, ip uint32, port uint16) (*Router, error) {
+func PrepareRouter(row uint, ip uint32, port uint16) (*Router, error) {
 	var addr C.uint
 	address := C.malloc(C.size_t(unsafe.Sizeof(addr)))
 	if C.PrepareRouter(C.uint(row), C.uint(ip), C.ushort(port), unsafe.Pointer(&address)) == 0 {

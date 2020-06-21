@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
-	"strconv"
-	"strings"
+	"os"
+	"sync"
 
-	"github.com/dilap54/RouterScan-console/pkg/librouter"
+	"github.com/dilap54/RouterScan-console/internal/routerscan"
 	"github.com/urfave/cli/v2"
 )
 
@@ -24,14 +27,17 @@ func scanCommand() *cli.Command {
 			&cli.PathFlag{
 				Name:  "auth-basic",
 				Value: "auth_basic.txt",
+				Usage: "./path/to/<ip>\\t<port>\\n file with credentials dictionary for basic auth",
 			},
 			&cli.PathFlag{
 				Name:  "auth-digest",
 				Value: "auth_digest.txt",
+				Usage: "./path/to/<ip>\\t<port>\\nfile with credentials dictionary for digest auth",
 			},
 			&cli.PathFlag{
 				Name:  "auth-form",
 				Value: "auth_form.txt",
+				Usage: "./path/to/<ip>\\t<port>\\n file with credentials dictionary for form auth",
 			},
 			&cli.BoolFlag{
 				Name:  "module-scanrouter",
@@ -64,124 +70,107 @@ func scanCommand() *cli.Command {
 			&cli.IntFlag{
 				Name:  "st-debug-verbosity",
 				Value: 0,
+				Usage: "supported levels: 1, 2, 3",
+			},
+			&cli.StringFlag{
+				Name:  "st-user-agent",
+				Value: "Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1",
+			},
+			&cli.PathFlag{
+				Name:    "input",
+				Aliases: []string{"i"},
+				Value:   "-",
+				Usage:   "/path/to/<ip>:<port>\n file with list of targets, or '-' for read targets from stdin",
+			},
+			&cli.IntFlag{
+				Name:    "threads",
+				Aliases: []string{"t"},
+				Value:   5,
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if err := librouter.Initialize(); err != nil {
-				return err
-			}
-			count, err := librouter.GetModuleCount()
-			if err != nil {
-				return err
-			}
-			for i := 0; i < count; i++ {
-				info, err := librouter.GetModuleInfo(i)
-				if err != nil {
-					return err
-				}
-				if strings.Contains(info.Name, "RouterScanRouter") && info.Enabled != c.Bool("module-scanrouter") {
-					if err := librouter.SwitchModule(i, c.Bool("module-scanrouter")); err != nil {
-						log.Fatalf("cannot switch module RouterScanRouter to %t", c.Bool("module-scanrouter"))
-					} else {
-						log.Printf("module RouterScanRouter enabled = %t", c.Bool("module-scanrouter"))
-					}
-				}
-				if strings.Contains(info.Name, "ProxyCheckDetect") && info.Enabled != c.Bool("module-proxycheck") {
-					if err := librouter.SwitchModule(i, c.Bool("module-proxycheck")); err != nil {
-						log.Fatalf("cannot switch module ProxyCheckDetect to %t", c.Bool("module-proxycheck"))
-					} else {
-						log.Printf("module ProxyCheckDetect enabled = %t", c.Bool("module-proxycheck"))
-					}
-				}
-				if strings.Contains(info.Name, "HNAPUse") && info.Enabled != c.Bool("module-hnap") {
-					if err := librouter.SwitchModule(i, c.Bool("module-hnap")); err != nil {
-						log.Fatalf("cannot switch module HNAPUse to %t", c.Bool("module-hnap"))
-					} else {
-						log.Printf("module HNAPUse enabled = %t", c.Bool("module-hnap"))
-					}
-				}
-				if strings.Contains(info.Name, "SQLiteSQLite") && info.Enabled != c.Bool("module-sqlite") {
-					if err := librouter.SwitchModule(i, c.Bool("module-sqlite")); err != nil {
-						log.Fatalf("cannot switch module SQLiteSQLite to %t", c.Bool("module-sqlite"))
-					} else {
-						log.Printf("module SQLiteSQLite enabled = %t", c.Bool("module-sqlite"))
-					}
-				}
-				if strings.Contains(info.Name, "HudsonHudson") && info.Enabled != c.Bool("module-hudson") {
-					if err := librouter.SwitchModule(i, c.Bool("module-hudson")); err != nil {
-						log.Fatalf("cannot switch module HudsonHudson to %t", c.Bool("module-hudson"))
-					} else {
-						log.Printf("module HudsonHudson enabled = %t", c.Bool("module-hudson"))
-					}
-				}
-				if strings.Contains(info.Name, "PMAphpMyAdmin") && info.Enabled != c.Bool("module-phpmyadmin") {
-					if err := librouter.SwitchModule(i, c.Bool("module-phpmyadmin")); err != nil {
-						log.Fatalf("cannot switch module PMAphpMyAdmin to %t", c.Bool("module-phpmyadmin"))
-					} else {
-						log.Printf("module PMAphpMyAdmin enabled = %t", c.Bool("module-phpmyadmin"))
-					}
-				}
-			}
-			if c.IsSet("st-enable-debug") {
-				log.Printf("setting stEnableDebug = %t", c.Bool("st-enable-debug"))
-				if err := librouter.SetParamBool(librouter.StEnableDebug, c.Bool("st-enable-debug")); err != nil {
-					panic(err)
-				}
-			}
-			if c.IsSet("st-debug-verbosity") {
-				log.Printf("setting stDebugVerbosity = %d", c.Int("st-debug-verbosity"))
-				if err := librouter.SetParamInt(librouter.StDebugVerbosity, c.Int("st-debug-verbosity")); err != nil {
-					panic(err)
-				}
-			}
-
-			if err := librouter.SetParamString(librouter.StUserAgent, "Mozilla/5.0 (Windows NT 5.1; rv:9.0.1) Gecko/20100101 Firefox/9.0.1"); err != nil {
-				panic(err)
-			}
 			authBasic, err := ioutil.ReadFile(c.Path("auth-basic"))
 			if err != nil {
-				panic(err)
-			}
-			if err := librouter.SetParamString(librouter.StPairsBasic, string(authBasic)); err != nil {
-				panic(err)
+				return err
 			}
 			authDigest, err := ioutil.ReadFile(c.Path("auth-digest"))
 			if err != nil {
-				panic(err)
-			}
-			if err := librouter.SetParamString(librouter.StPairsDigest, string(authDigest)); err != nil {
-				panic(err)
+				return err
 			}
 			authForm, err := ioutil.ReadFile(c.Path("auth-form"))
 			if err != nil {
-				panic(err)
+				return err
 			}
-			if err := librouter.SetParamString(librouter.StPairsForm, string(authForm)); err != nil {
-				panic(err)
+			moduleOptions := routerscan.ModulesOptions{
+				Hnap:       c.Bool("module-hnap"),
+				Hudson:     c.Bool("module-hudson"),
+				Phpmyadmin: c.Bool("module-phpmyadmin"),
+				Proxycheck: c.Bool("module-proxycheck"),
+				Scanrouter: c.Bool("module-scanrouter"),
+				Sqlite:     c.Bool("module-sqlite"),
+			}
+			stOptions := routerscan.StOptions{
+				EnableDebug:    c.Bool("st-enable-debug"),
+				DebugVerbosity: c.Int("st-debug-verbosity"),
+				UserAgent:      c.String("st-user-agent"),
+				PairsBasic:     string(authBasic),
+				PairsDigest:    string(authDigest),
+				PairsForm:      string(authForm),
+			}
+			rsscan, err := routerscan.New(moduleOptions, stOptions)
+			if err != nil {
+				return err
 			}
 
-			if err := librouter.SetSetTableDataCallback(func(row uint, name string, value string) {
-				fmt.Printf("%d %s %s\n", row, name, value)
-			}); err != nil {
-				panic(err)
+			ch := make(chan string)
+			wg := sync.WaitGroup{}
+			for thread := 0; thread < c.Int("threads"); thread++ {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					for in := range ch {
+						target, err := routerscan.ParseTarget(in)
+						if err != nil {
+							log.Println(err)
+							continue
+						}
+						result, err := rsscan.Scan(target)
+						if err != nil {
+							log.Println(err)
+							continue
+						}
+						jsonBytes, err := json.Marshal(result)
+						if err != nil {
+							log.Println(err)
+							continue
+						}
+						fmt.Println(string(jsonBytes))
+					}
+				}()
 			}
-			if err := librouter.SetWriteLogCallback(func(str string, verbosity int) {
-				fmt.Printf("%s %d\n", str, verbosity)
-			}); err != nil {
-				panic(err)
+
+			if c.IsSet("input") {
+				var reader io.Reader
+				if c.Path("input") == "-" {
+					reader = os.Stdin
+				} else {
+					file, err := os.Open(c.Path("input"))
+					if err != nil {
+						return err
+					}
+					reader = file
+				}
+				scanner := bufio.NewScanner(reader)
+				for scanner.Scan() {
+					ch <- scanner.Text()
+				}
+			} else {
+				ch <- c.String("target")
 			}
-			host := strings.Split(c.String("target"), ":")
-			port, _ := strconv.ParseUint(host[1], 10, 16)
-			router, err := librouter.PrepareRouter(1, inet_aton(host[0]), uint16(port))
-			if err != nil {
-				panic(err)
-			}
-			if err := router.Scan(); err != nil {
-				panic(err)
-			}
-			if err := router.Free(); err != nil {
-				panic(err)
-			}
+			close(ch)
+
+			wg.Wait()
+
 			return nil
 		},
 	}

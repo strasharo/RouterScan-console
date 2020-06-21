@@ -22,7 +22,14 @@ func cCharToString(val *C.char) string {
 		test := []byte(C.GoStringN(val, C.int(testLen)))
 		for i := 0; i < len(test)-1; i++ {
 			if test[i] == '\x00' && test[i+1] == '\x00' {
-				return C.GoStringN(val, C.int(i))
+				withExcessBytes := []byte(C.GoStringN(val, C.int(i)))
+				buf := make([]byte, 0)
+				for i := 0; i < len(withExcessBytes); i++ {
+					if withExcessBytes[i] != '\x00' {
+						buf = append(buf, withExcessBytes[i])
+					}
+				}
+				return string(buf)
 			}
 		}
 	}
