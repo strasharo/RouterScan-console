@@ -5,13 +5,13 @@ It is a concole version of RouterScan for linux. It uses closed Router Core Libr
 Scanning single target
 
 ```bash
-    ./routerscan scan --target <ip:port>
+    LD_LIBRARY_PATH=. ./routerscan scan --target <ip:port>
 ```
 
 Scanning multiple targets
 
 ```bash
-    ./routerscan scan --input=./path/to/ip:port/list
+    LD_LIBRARY_PATH=. ./routerscan scan --input=./path/to/ip:port/list
     # or
-    echo "<ip:port>\n<ip2:port2>\n" | ./routerscan --input -
+    LD_LIBRARY_PATH=. echo "<ip:port>\n<ip2:port2>\n" | ./routerscan --input -
 ```

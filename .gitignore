@@ -1,4 +1,6 @@
 .vscode/
-auth_basic.txt
-auth_digest.txt
-auth_form.txt
+dist/auth_basic.txt
+dist/auth_digest.txt
+dist/auth_form.txt
+dist/liblibrouter.so
+dist/routerscan
