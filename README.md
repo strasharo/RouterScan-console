@@ -1,4 +1,4 @@
-It is a concole version of RouterScan for linux. It uses closed Router Core Library. Original soft is hosted here: [http://stascorp.com/load/1-1-0-56](http://stascorp.com/load/1-1-0-56)
+It is a console version of RouterScan for linux. It uses closed Router Core Library. Original soft is hosted here: [http://stascorp.com/load/1-1-0-56](http://stascorp.com/load/1-1-0-56)
 
 ## Usage
 
